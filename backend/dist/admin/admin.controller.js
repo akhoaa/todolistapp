@@ -28,32 +28,32 @@ let AdminController = class AdminController {
     }
     listUsers(req, query) {
         if (!isAdmin(req))
-            throw new Error('Forbidden');
+            throw new common_1.ForbiddenException();
         return this.adminService.listUsers(query);
     }
     getUser(req, id) {
         if (!isAdmin(req))
-            throw new Error('Forbidden');
+            throw new common_1.ForbiddenException();
         return this.adminService.getUser(id);
     }
     updateUser(req, id, dto) {
         if (!isAdmin(req))
-            throw new Error('Forbidden');
+            throw new common_1.ForbiddenException();
         return this.adminService.updateUser(id, dto);
     }
     deleteUser(req, id) {
         if (!isAdmin(req))
-            throw new Error('Forbidden');
+            throw new common_1.ForbiddenException();
         return this.adminService.deleteUser(id);
     }
     reportTasks(req, query) {
         if (!isAdmin(req))
-            throw new Error('Forbidden');
+            throw new common_1.ForbiddenException();
         return this.adminService.reportTasks(query);
     }
     reportUsers(req, query) {
         if (!isAdmin(req))
-            throw new Error('Forbidden');
+            throw new common_1.ForbiddenException();
         return this.adminService.reportUsers(query);
     }
 };

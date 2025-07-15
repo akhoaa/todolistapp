@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { User as UserDecorator } from '../common/user.decorator';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -14,14 +15,12 @@ export class UsersController {
 
   // Giả lập lấy userId từ request, sẽ thay bằng guard sau
   @Get('me')
-  getMe(@Req() req: Request) {
-    const userId = req.headers['x-user-id'] as string || ((req as any).user?.userId);
+  getMe(@UserDecorator('userId') userId: string) {
     return this.usersService.getMe(userId);
   }
 
   @Put('me')
-  updateMe(@Req() req: Request, @Body() dto: UpdateUserDto) {
-    const userId = req.headers['x-user-id'] as string || ((req as any).user?.userId);
+  updateMe(@UserDecorator('userId') userId: string, @Body() dto: UpdateUserDto) {
     return this.usersService.updateMe(userId, dto);
   }
 }

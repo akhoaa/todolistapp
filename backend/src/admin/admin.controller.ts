@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, Put, Delete, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Query, Param, Put, Delete, Body, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -18,37 +18,37 @@ export class AdminController {
 
   @Get('users')
   listUsers(@Req() req: Request, @Query() query: any) {
-    if (!isAdmin(req)) throw new Error('Forbidden');
+    if (!isAdmin(req)) throw new ForbiddenException();
     return this.adminService.listUsers(query);
   }
 
   @Get('users/:id')
   getUser(@Req() req: Request, @Param('id') id: string) {
-    if (!isAdmin(req)) throw new Error('Forbidden');
+    if (!isAdmin(req)) throw new ForbiddenException();
     return this.adminService.getUser(id);
   }
 
   @Put('users/:id')
   updateUser(@Req() req: Request, @Param('id') id: string, @Body() dto: UpdateUserByAdminDto) {
-    if (!isAdmin(req)) throw new Error('Forbidden');
+    if (!isAdmin(req)) throw new ForbiddenException();
     return this.adminService.updateUser(id, dto);
   }
 
   @Delete('users/:id')
   deleteUser(@Req() req: Request, @Param('id') id: string) {
-    if (!isAdmin(req)) throw new Error('Forbidden');
+    if (!isAdmin(req)) throw new ForbiddenException();
     return this.adminService.deleteUser(id);
   }
 
   @Get('report/tasks')
   reportTasks(@Req() req: Request, @Query() query: any) {
-    if (!isAdmin(req)) throw new Error('Forbidden');
+    if (!isAdmin(req)) throw new ForbiddenException();
     return this.adminService.reportTasks(query);
   }
 
   @Get('report/users')
   reportUsers(@Req() req: Request, @Query() query: any) {
-    if (!isAdmin(req)) throw new Error('Forbidden');
+    if (!isAdmin(req)) throw new ForbiddenException();
     return this.adminService.reportUsers(query);
   }
 } 

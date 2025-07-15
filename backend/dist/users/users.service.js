@@ -24,28 +24,42 @@ let UsersService = class UsersService {
         this.userModel = userModel;
     }
     async getMe(userId) {
-        const user = await this.userModel.findById(userId).select('-password');
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
-        return user;
+        try {
+            const user = await this.userModel.findById(userId).select('-password');
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            return user;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Get user failed');
+        }
     }
     async updateMe(userId, dto) {
-        const user = await this.userModel.findById(userId);
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
-        if (dto.email && dto.email !== user.email) {
-            const exists = await this.userModel.findOne({ email: dto.email });
-            if (exists)
-                throw new common_1.BadRequestException('Email already in use');
-            user.email = dto.email;
+        try {
+            const user = await this.userModel.findById(userId);
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            if (dto.email && dto.email !== user.email) {
+                const exists = await this.userModel.findOne({ email: dto.email });
+                if (exists)
+                    throw new common_1.BadRequestException('Email already in use');
+                user.email = dto.email;
+            }
+            if (dto.name)
+                user.name = dto.name;
+            if (dto.password)
+                user.password = await bcrypt.hash(dto.password, 10);
+            await user.save();
+            const { password, ...rest } = user.toObject();
+            return rest;
         }
-        if (dto.name)
-            user.name = dto.name;
-        if (dto.password)
-            user.password = await bcrypt.hash(dto.password, 10);
-        await user.save();
-        const { password, ...rest } = user.toObject();
-        return rest;
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Update user failed');
+        }
     }
 };
 exports.UsersService = UsersService;

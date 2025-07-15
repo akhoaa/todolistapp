@@ -18,34 +18,33 @@ const swagger_1 = require("@nestjs/swagger");
 const users_service_1 = require("./users.service");
 const update_user_dto_1 = require("./dto/update-user.dto");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const user_decorator_1 = require("../common/user.decorator");
 let UsersController = class UsersController {
     usersService;
     constructor(usersService) {
         this.usersService = usersService;
     }
-    getMe(req) {
-        const userId = req.headers['x-user-id'] || (req.user?.userId);
+    getMe(userId) {
         return this.usersService.getMe(userId);
     }
-    updateMe(req, dto) {
-        const userId = req.headers['x-user-id'] || (req.user?.userId);
+    updateMe(userId, dto) {
         return this.usersService.updateMe(userId, dto);
     }
 };
 exports.UsersController = UsersController;
 __decorate([
     (0, common_1.Get)('me'),
-    __param(0, (0, common_1.Req)()),
+    __param(0, (0, user_decorator_1.User)('userId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getMe", null);
 __decorate([
     (0, common_1.Put)('me'),
-    __param(0, (0, common_1.Req)()),
+    __param(0, (0, user_decorator_1.User)('userId')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, update_user_dto_1.UpdateUserDto]),
+    __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateMe", null);
 exports.UsersController = UsersController = __decorate([

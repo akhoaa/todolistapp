@@ -23,83 +23,128 @@ let ProjectsService = class ProjectsService {
         this.projectModel = projectModel;
     }
     async create(userId, dto) {
-        const project = await this.projectModel.create({
-            ...dto,
-            owner: userId,
-            members: [userId],
-        });
-        return project;
+        try {
+            const project = await this.projectModel.create({
+                ...dto,
+                owner: userId,
+                members: [userId],
+            });
+            return project;
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Create project failed');
+        }
     }
     async findAll(userId, role, query) {
-        const { page = 1, limit = 10, name } = query;
-        let filter = {};
-        if (role === 'admin') {
+        try {
+            const { page = 1, limit = 10, name } = query;
+            let filter = {};
+            if (role === 'admin') {
+            }
+            else {
+                filter = { $or: [{ owner: userId }, { members: userId }] };
+            }
+            if (name)
+                filter.name = { $regex: name, $options: 'i' };
+            const skip = (Number(page) - 1) * Number(limit);
+            const data = await this.projectModel.find(filter).skip(skip).limit(Number(limit)).sort({ createdAt: -1 });
+            const total = await this.projectModel.countDocuments(filter);
+            return { data, page: Number(page), limit: Number(limit), total };
         }
-        else {
-            filter = { $or: [{ owner: userId }, { members: userId }] };
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Get projects failed');
         }
-        if (name)
-            filter.name = { $regex: name, $options: 'i' };
-        const skip = (Number(page) - 1) * Number(limit);
-        const data = await this.projectModel.find(filter).skip(skip).limit(Number(limit)).sort({ createdAt: -1 });
-        const total = await this.projectModel.countDocuments(filter);
-        return { data, page: Number(page), limit: Number(limit), total };
     }
     async findOne(userId, role, id) {
-        const project = await this.projectModel.findById(id);
-        if (!project)
-            throw new common_1.NotFoundException('Project not found');
-        if (role !== 'admin' &&
-            project.owner.toString() !== userId &&
-            !project.members.map(m => m.toString()).includes(userId)) {
-            throw new common_1.ForbiddenException('No access');
+        try {
+            const project = await this.projectModel.findById(id);
+            if (!project)
+                throw new common_1.NotFoundException('Project not found');
+            if (role !== 'admin' &&
+                project.owner.toString() !== userId &&
+                !project.members.map(m => m.toString()).includes(userId)) {
+                throw new common_1.ForbiddenException('No access');
+            }
+            return project;
         }
-        return project;
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Get project failed');
+        }
     }
     async update(userId, role, id, dto) {
-        const project = await this.projectModel.findById(id);
-        if (!project)
-            throw new common_1.NotFoundException('Project not found');
-        if (role !== 'admin' && project.owner.toString() !== userId) {
-            throw new common_1.ForbiddenException('Only owner or admin can update');
+        try {
+            const project = await this.projectModel.findById(id);
+            if (!project)
+                throw new common_1.NotFoundException('Project not found');
+            if (role !== 'admin' && project.owner.toString() !== userId) {
+                throw new common_1.ForbiddenException('Only owner or admin can update');
+            }
+            Object.assign(project, dto);
+            await project.save();
+            return project;
         }
-        Object.assign(project, dto);
-        await project.save();
-        return project;
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Update project failed');
+        }
     }
     async remove(userId, role, id) {
-        const project = await this.projectModel.findById(id);
-        if (!project)
-            throw new common_1.NotFoundException('Project not found');
-        if (role !== 'admin' && project.owner.toString() !== userId) {
-            throw new common_1.ForbiddenException('Only owner or admin can delete');
+        try {
+            const project = await this.projectModel.findById(id);
+            if (!project)
+                throw new common_1.NotFoundException('Project not found');
+            if (role !== 'admin' && project.owner.toString() !== userId) {
+                throw new common_1.ForbiddenException('Only owner or admin can delete');
+            }
+            await project.deleteOne();
+            return { message: 'Project deleted' };
         }
-        await project.deleteOne();
-        return { message: 'Project deleted' };
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Delete project failed');
+        }
     }
     async addMember(userId, role, id, memberId) {
-        const project = await this.projectModel.findById(id);
-        if (!project)
-            throw new common_1.NotFoundException('Project not found');
-        if (role !== 'admin' && project.owner.toString() !== userId) {
-            throw new common_1.ForbiddenException('Only owner or admin can add member');
+        try {
+            const project = await this.projectModel.findById(id);
+            if (!project)
+                throw new common_1.NotFoundException('Project not found');
+            if (role !== 'admin' && project.owner.toString() !== userId) {
+                throw new common_1.ForbiddenException('Only owner or admin can add member');
+            }
+            if (!project.members.map(m => m.toString()).includes(memberId)) {
+                project.members.push(new mongoose_2.Types.ObjectId(memberId));
+                await project.save();
+            }
+            return project;
         }
-        if (!project.members.map(m => m.toString()).includes(memberId)) {
-            project.members.push(new mongoose_2.Types.ObjectId(memberId));
-            await project.save();
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Add member failed');
         }
-        return project;
     }
     async removeMember(userId, role, id, memberId) {
-        const project = await this.projectModel.findById(id);
-        if (!project)
-            throw new common_1.NotFoundException('Project not found');
-        if (role !== 'admin' && project.owner.toString() !== userId) {
-            throw new common_1.ForbiddenException('Only owner or admin can remove member');
+        try {
+            const project = await this.projectModel.findById(id);
+            if (!project)
+                throw new common_1.NotFoundException('Project not found');
+            if (role !== 'admin' && project.owner.toString() !== userId) {
+                throw new common_1.ForbiddenException('Only owner or admin can remove member');
+            }
+            project.members = project.members.filter((m) => m.toString() !== memberId);
+            await project.save();
+            return project;
         }
-        project.members = project.members.filter((m) => m.toString() !== memberId);
-        await project.save();
-        return project;
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Remove member failed');
+        }
     }
 };
 exports.ProjectsService = ProjectsService;

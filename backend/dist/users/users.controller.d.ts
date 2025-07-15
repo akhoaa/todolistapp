@@ -1,15 +1,14 @@
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Request } from 'express';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    getMe(req: Request): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.shema").UserDocument, {}> & import("./schemas/user.shema").User & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
+    getMe(userId: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.shema").UserDocument, {}> & import("./schemas/user.shema").User & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
         _id: unknown;
     }> & {
         __v: number;
     }>;
-    updateMe(req: Request, dto: UpdateUserDto): Promise<{
+    updateMe(userId: string, dto: UpdateUserDto): Promise<{
         name: string;
         email: string;
         role: string;

@@ -6,6 +6,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Request } from 'express';
 import { AddMemberDto } from './dto/add-member.dto';
+import { User as UserDecorator } from '../common/user.decorator';
 
 @ApiTags('projects')
 @ApiBearerAuth()
@@ -15,50 +16,37 @@ export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
   @Post()
-  create(@Req() req: Request, @Body() dto: CreateProjectDto) {
-    const userId = (req as any).user.userId;
+  create(@UserDecorator('userId') userId: string, @Body() dto: CreateProjectDto) {
     return this.projectsService.create(userId, dto);
   }
 
   @Get()
-  findAll(@Req() req: Request, @Query() query: any) {
-    const userId = (req as any).user.userId;
-    const role = (req as any).user.role;
+  findAll(@UserDecorator('userId') userId: string, @UserDecorator('role') role: string, @Query() query: any) {
     return this.projectsService.findAll(userId, role, query);
   }
 
   @Get(':id')
-  findOne(@Req() req: Request, @Param('id') id: string) {
-    const userId = (req as any).user.userId;
-    const role = (req as any).user.role;
+  findOne(@UserDecorator('userId') userId: string, @UserDecorator('role') role: string, @Param('id') id: string) {
     return this.projectsService.findOne(userId, role, id);
   }
 
   @Put(':id')
-  update(@Req() req: Request, @Param('id') id: string, @Body() dto: UpdateProjectDto) {
-    const userId = (req as any).user.userId;
-    const role = (req as any).user.role;
+  update(@UserDecorator('userId') userId: string, @UserDecorator('role') role: string, @Param('id') id: string, @Body() dto: UpdateProjectDto) {
     return this.projectsService.update(userId, role, id, dto);
   }
 
   @Delete(':id')
-  remove(@Req() req: Request, @Param('id') id: string) {
-    const userId = (req as any).user.userId;
-    const role = (req as any).user.role;
+  remove(@UserDecorator('userId') userId: string, @UserDecorator('role') role: string, @Param('id') id: string) {
     return this.projectsService.remove(userId, role, id);
   }
 
   @Post(':id/members')
-  addMember(@Req() req: Request, @Param('id') id: string, @Body() body: AddMemberDto) {
-    const userId = (req as any).user.userId;
-    const role = (req as any).user.role;
+  addMember(@UserDecorator('userId') userId: string, @UserDecorator('role') role: string, @Param('id') id: string, @Body() body: AddMemberDto) {
     return this.projectsService.addMember(userId, role, id, body.userId);
   }
 
   @Delete(':id/members/:userId')
-  removeMember(@Req() req: Request, @Param('id') id: string, @Param('userId') memberId: string) {
-    const userId = (req as any).user.userId;
-    const role = (req as any).user.role;
+  removeMember(@UserDecorator('userId') userId: string, @UserDecorator('role') role: string, @Param('id') id: string, @Param('userId') memberId: string) {
     return this.projectsService.removeMember(userId, role, id, memberId);
   }
 } 

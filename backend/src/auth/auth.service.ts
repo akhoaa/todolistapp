@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -22,68 +22,93 @@ export class AuthService {
   ) {}
 
   async signup(dto: SignupDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (user) throw new BadRequestException('Email already exists');
-    const hash = await bcrypt.hash(dto.password, 10);
-    const otp = generateOTP();
-    const newUser = await this.userModel.create({
-      name: dto.name,
-      email: dto.email,
-      password: hash,
-      otp,
-      otpExpires: new Date(Date.now() + 10 * 60 * 1000),
-    });
-    // Gửi OTP qua email (mock)
-    console.log(`OTP for ${dto.email}: ${otp}`);
-    const token = this.jwtService.sign({ sub: newUser._id, role: newUser.role });
-    return { token };
+    try {
+      const user = await this.userModel.findOne({ email: dto.email });
+      if (user) throw new BadRequestException('Email already exists');
+      const hash = await bcrypt.hash(dto.password, 10);
+      const otp = generateOTP();
+      const newUser = await this.userModel.create({
+        name: dto.name,
+        email: dto.email,
+        password: hash,
+        otp,
+        otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      // Gửi OTP qua email (mock)
+      console.log(`OTP for ${dto.email}: ${otp}`);
+      const token = this.jwtService.sign({ sub: newUser._id, role: newUser.role });
+      return { token };
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Signup failed');
+    }
   }
 
   async signin(dto: SigninDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-    if (!user.isVerified) throw new UnauthorizedException('Account not verified');
-    const isMatch = await bcrypt.compare(dto.password, user.password);
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
-    const token = this.jwtService.sign({ sub: user._id, role: user.role });
-    return { token };
+    try {
+      const user = await this.userModel.findOne({ email: dto.email });
+      if (!user) throw new UnauthorizedException('Invalid credentials');
+      if (!user.isVerified) throw new UnauthorizedException('Account not verified');
+      const isMatch = await bcrypt.compare(dto.password, user.password);
+      if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+      const token = this.jwtService.sign({ sub: user._id, role: user.role });
+      return { token };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      throw new InternalServerErrorException('Signin failed');
+    }
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user) throw new NotFoundException('User not found');
-    const otp = generateOTP();
-    user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
-    await user.save();
-    // Gửi OTP qua email (mock)
-    console.log(`OTP for ${dto.email}: ${otp}`);
-    return { message: 'OTP sent to email' };
+    try {
+      const user = await this.userModel.findOne({ email: dto.email });
+      if (!user) throw new NotFoundException('User not found');
+      const otp = generateOTP();
+      user.otp = otp;
+      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+      // Gửi OTP qua email (mock)
+      console.log(`OTP for ${dto.email}: ${otp}`);
+      return { message: 'OTP sent to email' };
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Forgot password failed');
+    }
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user) throw new NotFoundException('User not found');
-    if (!user.otp || user.otp !== dto.otp || !user.otpExpires || user.otpExpires < new Date()) {
-      throw new BadRequestException('Invalid or expired OTP');
+    try {
+      const user = await this.userModel.findOne({ email: dto.email });
+      if (!user) throw new NotFoundException('User not found');
+      if (!user.otp || user.otp !== dto.otp || !user.otpExpires || user.otpExpires < new Date()) {
+        throw new BadRequestException('Invalid or expired OTP');
+      }
+      user.password = await bcrypt.hash(dto.newPassword, 10);
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+      return { message: 'Password reset successful' };
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Reset password failed');
     }
-    user.password = await bcrypt.hash(dto.newPassword, 10);
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-    return { message: 'Password reset successful' };
   }
 
   async verify(dto: VerifyDto) {
-    const user = await this.userModel.findOne({ email: dto.email });
-    if (!user) throw new NotFoundException('User not found');
-    if (!user.otp || user.otp !== dto.otp || !user.otpExpires || user.otpExpires < new Date()) {
-      throw new BadRequestException('Invalid or expired OTP');
+    try {
+      const user = await this.userModel.findOne({ email: dto.email });
+      if (!user) throw new NotFoundException('User not found');
+      if (!user.otp || user.otp !== dto.otp || !user.otpExpires || user.otpExpires < new Date()) {
+        throw new BadRequestException('Invalid or expired OTP');
+      }
+      user.isVerified = true;
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+      return { message: 'Account verified successfully' };
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Verify failed');
     }
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-    return { message: 'Account verified successfully' };
   }
 }

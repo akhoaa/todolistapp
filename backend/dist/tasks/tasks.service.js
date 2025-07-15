@@ -23,46 +23,77 @@ let TasksService = class TasksService {
         this.taskModel = taskModel;
     }
     async create(userId, dto) {
-        return this.taskModel.create({ ...dto, user: userId });
+        try {
+            return await this.taskModel.create({ ...dto, user: userId });
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Create task failed');
+        }
     }
     async findAll(userId, query) {
-        const { date, page = 1, limit = 10, completed } = query;
-        const filter = { user: userId };
-        if (date)
-            filter.date = date;
-        if (completed !== undefined)
-            filter.completed = completed === 'true' || completed === true;
-        const skip = (Number(page) - 1) * Number(limit);
-        const data = await this.taskModel.find(filter).skip(skip).limit(Number(limit)).sort({ date: -1 });
-        const total = await this.taskModel.countDocuments(filter);
-        return { data, page: Number(page), limit: Number(limit), total };
+        try {
+            const { date, page = 1, limit = 10, completed } = query;
+            const filter = { user: userId };
+            if (date)
+                filter.date = date;
+            if (completed !== undefined)
+                filter.completed = completed === 'true' || completed === true;
+            const skip = (Number(page) - 1) * Number(limit);
+            const data = await this.taskModel.find(filter).skip(skip).limit(Number(limit)).sort({ date: -1 });
+            const total = await this.taskModel.countDocuments(filter);
+            return { data, page: Number(page), limit: Number(limit), total };
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Get tasks failed');
+        }
     }
     async findOne(userId, id) {
-        const task = await this.taskModel.findById(id);
-        if (!task)
-            throw new common_1.NotFoundException('Task not found');
-        if (task.user.toString() !== userId)
-            throw new common_1.ForbiddenException('No access');
-        return task;
+        try {
+            const task = await this.taskModel.findById(id);
+            if (!task)
+                throw new common_1.NotFoundException('Task not found');
+            if (task.user.toString() !== userId)
+                throw new common_1.ForbiddenException('No access');
+            return task;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Get task failed');
+        }
     }
     async update(userId, id, dto) {
-        const task = await this.taskModel.findById(id);
-        if (!task)
-            throw new common_1.NotFoundException('Task not found');
-        if (task.user.toString() !== userId)
-            throw new common_1.ForbiddenException('No access');
-        Object.assign(task, dto);
-        await task.save();
-        return task;
+        try {
+            const task = await this.taskModel.findById(id);
+            if (!task)
+                throw new common_1.NotFoundException('Task not found');
+            if (task.user.toString() !== userId)
+                throw new common_1.ForbiddenException('No access');
+            Object.assign(task, dto);
+            await task.save();
+            return task;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Update task failed');
+        }
     }
     async remove(userId, id) {
-        const task = await this.taskModel.findById(id);
-        if (!task)
-            throw new common_1.NotFoundException('Task not found');
-        if (task.user.toString() !== userId)
-            throw new common_1.ForbiddenException('No access');
-        await task.deleteOne();
-        return { message: 'Task deleted' };
+        try {
+            const task = await this.taskModel.findById(id);
+            if (!task)
+                throw new common_1.NotFoundException('Task not found');
+            if (task.user.toString() !== userId)
+                throw new common_1.ForbiddenException('No access');
+            await task.deleteOne();
+            return { message: 'Task deleted' };
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Delete task failed');
+        }
     }
 };
 exports.TasksService = TasksService;

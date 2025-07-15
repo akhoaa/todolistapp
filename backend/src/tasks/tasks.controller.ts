@@ -5,6 +5,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Request } from 'express';
+import { User as UserDecorator } from '../common/user.decorator';
 
 @ApiTags('tasks')
 @ApiBearerAuth()
@@ -14,32 +15,27 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Post()
-  create(@Req() req: Request, @Body() dto: CreateTaskDto) {
-    const userId = (req as any).user.userId;
+  create(@UserDecorator('userId') userId: string, @Body() dto: CreateTaskDto) {
     return this.tasksService.create(userId, dto);
   }
 
   @Get()
-  findAll(@Req() req: Request, @Query() query: any) {
-    const userId = (req as any).user.userId;
+  findAll(@UserDecorator('userId') userId: string, @Query() query: any) {
     return this.tasksService.findAll(userId, query);
   }
 
   @Get(':id')
-  findOne(@Req() req: Request, @Param('id') id: string) {
-    const userId = (req as any).user.userId;
+  findOne(@UserDecorator('userId') userId: string, @Param('id') id: string) {
     return this.tasksService.findOne(userId, id);
   }
 
   @Put(':id')
-  update(@Req() req: Request, @Param('id') id: string, @Body() dto: UpdateTaskDto) {
-    const userId = (req as any).user.userId;
+  update(@UserDecorator('userId') userId: string, @Param('id') id: string, @Body() dto: UpdateTaskDto) {
     return this.tasksService.update(userId, id, dto);
   }
 
   @Delete(':id')
-  remove(@Req() req: Request, @Param('id') id: string) {
-    const userId = (req as any).user.userId;
+  remove(@UserDecorator('userId') userId: string, @Param('id') id: string) {
     return this.tasksService.remove(userId, id);
   }
 } 

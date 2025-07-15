@@ -1,14 +1,22 @@
 {
+  "name": "ssr-todolist-frontend",
+  "version": "1.0.0",
+  "description": "SSR Frontend for TodoList App (Express + EJS + MDBootstrap)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "@nestjs/jwt": "^11.0.0",
-    "@nestjs/mongoose": "^11.0.3",
-    "@nestjs/passport": "^11.0.5",
-    "@nestjs/swagger": "^11.2.0",
-    "bcryptjs": "^3.0.2",
+    "axios": "^1.10.0",
     "cookie-parser": "^1.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.16.3",
-    "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1"
+    "morgan": "^1.10.0",
+    "react-router-dom": "^7.6.3"
+  },
+  "devDependencies": {
+    "@types/react-router-dom": "^5.3.3"
   }
 }

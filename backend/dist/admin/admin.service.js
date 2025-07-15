@@ -26,66 +26,102 @@ let AdminService = class AdminService {
         this.taskModel = taskModel;
     }
     async listUsers(query) {
-        const { page = 1, limit = 10, search } = query;
-        const filter = {};
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-            ];
+        try {
+            const { page = 1, limit = 10, search } = query;
+            const filter = {};
+            if (search) {
+                filter.$or = [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } },
+                ];
+            }
+            const skip = (Number(page) - 1) * Number(limit);
+            const data = await this.userModel.find(filter).skip(skip).limit(Number(limit)).sort({ createdAt: -1 });
+            const total = await this.userModel.countDocuments(filter);
+            return { data, page: Number(page), limit: Number(limit), total };
         }
-        const skip = (Number(page) - 1) * Number(limit);
-        const data = await this.userModel.find(filter).skip(skip).limit(Number(limit)).sort({ createdAt: -1 });
-        const total = await this.userModel.countDocuments(filter);
-        return { data, page: Number(page), limit: Number(limit), total };
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Get users failed');
+        }
     }
     async getUser(id) {
-        const user = await this.userModel.findById(id).select('-password');
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
-        return user;
+        try {
+            const user = await this.userModel.findById(id).select('-password');
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            return user;
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Get user failed');
+        }
     }
     async updateUser(id, dto) {
-        const user = await this.userModel.findById(id);
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
-        if (dto.email !== undefined && dto.email !== user.email) {
-            const exists = await this.userModel.findOne({ email: dto.email });
-            if (exists)
-                throw new common_1.BadRequestException('Email already in use');
-            user.email = dto.email;
-        }
-        if (dto.name !== undefined) {
-            if (typeof dto.name !== 'string' || dto.name.trim() === '') {
-                throw new common_1.BadRequestException('Name is required and must not be empty');
+        try {
+            const user = await this.userModel.findById(id);
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            if (dto.email !== undefined && dto.email !== user.email) {
+                const exists = await this.userModel.findOne({ email: dto.email });
+                if (exists)
+                    throw new common_1.BadRequestException('Email already in use');
+                user.email = dto.email;
             }
-            user.name = dto.name;
+            if (dto.name !== undefined) {
+                if (typeof dto.name !== 'string' || dto.name.trim() === '') {
+                    throw new common_1.BadRequestException('Name is required and must not be empty');
+                }
+                user.name = dto.name;
+            }
+            if (dto.role !== undefined)
+                user.role = dto.role;
+            await user.save();
+            const { password, ...rest } = user.toObject();
+            return rest;
         }
-        if (dto.role !== undefined)
-            user.role = dto.role;
-        await user.save();
-        const { password, ...rest } = user.toObject();
-        return rest;
+        catch (error) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Update user failed');
+        }
     }
     async deleteUser(id) {
-        const user = await this.userModel.findById(id);
-        if (!user)
-            throw new common_1.NotFoundException('User not found');
-        await user.deleteOne();
-        return { message: 'User deleted' };
+        try {
+            const user = await this.userModel.findById(id);
+            if (!user)
+                throw new common_1.NotFoundException('User not found');
+            await user.deleteOne();
+            return { message: 'User deleted' };
+        }
+        catch (error) {
+            if (error instanceof common_1.NotFoundException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Delete user failed');
+        }
     }
     async reportTasks(query) {
-        const { date, userId } = query;
-        const filter = {};
-        if (date)
-            filter.date = date;
-        if (userId)
-            filter.user = userId;
-        const data = await this.taskModel.find(filter);
-        return { data };
+        try {
+            const { date, userId } = query;
+            const filter = {};
+            if (date)
+                filter.date = date;
+            if (userId)
+                filter.user = userId;
+            const data = await this.taskModel.find(filter);
+            return { data };
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Get report tasks failed');
+        }
     }
     async reportUsers(query) {
-        return { data: [], ...query };
+        try {
+            return { data: [], ...query };
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Get report users failed');
+        }
     }
 };
 exports.AdminService = AdminService;
