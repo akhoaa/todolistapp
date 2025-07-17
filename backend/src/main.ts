@@ -1,10 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
+import * as cookieParser from 'cookie-parser';
+import * as dotenv from 'dotenv';
+// import { HttpExceptionFilter } from './filters/http-exception.filter';
+
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle('ToDo List API')
@@ -16,11 +22,11 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.enableCors({
-    origin: 'http://localhost:3001', // hoặc true để cho phép mọi origin (dev)
+    origin: 'http://localhost:3001',
     credentials: true,
   });
 
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(3000);
 }

@@ -12,7 +12,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     JwtModule.register({
-      secret: 'your_jwt_secret', // Nên dùng biến môi trường thực tế
+      secret: process.env.JWT_SECRET || 'changeme', // Lấy từ biến môi trường, fallback nếu chưa set
       signOptions: { expiresIn: '7d' },
     }),
     UsersModule,

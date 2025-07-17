@@ -21,63 +21,130 @@ const signin_dto_1 = require("./dto/signin.dto");
 const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
 const verify_dto_1 = require("./dto/verify.dto");
+const response_helper_1 = require("../common/response.helper");
+const jwt_auth_guard_1 = require("./jwt-auth.guard");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
         this.authService = authService;
     }
-    signup(dto) {
-        return this.authService.signup(dto);
+    async signup(dto, res) {
+        try {
+            const result = await this.authService.signup(dto);
+            res.cookie('jwt', result.token, {
+                httpOnly: true,
+                sameSite: 'lax',
+            });
+            return (0, response_helper_1.successResponse)(res, { ...result, token: undefined }, 'Signup success', common_1.HttpStatus.CREATED);
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Signup failed');
+        }
     }
-    signin(dto) {
-        return this.authService.signin(dto);
+    async signin(dto, res) {
+        try {
+            const result = await this.authService.signin(dto);
+            res.cookie('jwt', result.token, {
+                httpOnly: true,
+                sameSite: 'lax',
+            });
+            return (0, response_helper_1.successResponse)(res, { ...result, token: undefined }, 'Signin success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Signin failed');
+        }
     }
-    forgotPassword(dto) {
-        return this.authService.forgotPassword(dto);
+    async forgotPassword(dto, res) {
+        try {
+            const result = await this.authService.forgotPassword(dto);
+            return (0, response_helper_1.successResponse)(res, result, 'Forgot password success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Forgot password failed');
+        }
     }
-    resetPassword(dto) {
-        return this.authService.resetPassword(dto);
+    async resetPassword(dto, res) {
+        try {
+            const result = await this.authService.resetPassword(dto);
+            return (0, response_helper_1.successResponse)(res, result, 'Reset password success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Reset password failed');
+        }
     }
-    verify(dto) {
-        return this.authService.verify(dto);
+    async verify(dto, res) {
+        try {
+            const result = await this.authService.verify(dto);
+            return (0, response_helper_1.successResponse)(res, result, 'Verify success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Verify failed');
+        }
+    }
+    async logout(res) {
+        res.clearCookie('jwt');
+        return (0, response_helper_1.successResponse)(res, null, 'Logout success');
+    }
+    getProfile(req) {
+        return req.user;
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('signup'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [signup_dto_1.SignupDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [signup_dto_1.SignupDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signup", null);
 __decorate([
     (0, common_1.Post)('signin'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [signin_dto_1.SigninDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [signin_dto_1.SigninDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signin", null);
 __decorate([
     (0, common_1.Post)('forgot-password'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([
     (0, common_1.Post)('reset-password'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
 __decorate([
     (0, common_1.Post)('verify'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [verify_dto_1.VerifyDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [verify_dto_1.VerifyDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verify", null);
+__decorate([
+    (0, common_1.Post)('logout'),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('me'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getProfile", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),

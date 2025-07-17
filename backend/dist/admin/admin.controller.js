@@ -18,6 +18,9 @@ const swagger_1 = require("@nestjs/swagger");
 const admin_service_1 = require("./admin.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const update_user_dto_1 = require("./dto/update-user.dto");
+const response_helper_1 = require("../common/response.helper");
+const create_user_dto_1 = require("./dto/create-user.dto");
+const common_2 = require("../common");
 function isAdmin(req) {
     return req.user?.role === 'admin';
 }
@@ -31,35 +34,74 @@ let AdminController = class AdminController {
             throw new common_1.ForbiddenException();
         return this.adminService.listUsers(query);
     }
-    getUser(req, id) {
-        if (!isAdmin(req))
-            throw new common_1.ForbiddenException();
-        return this.adminService.getUser(id);
+    async getUser(id, res) {
+        try {
+            const user = await this.adminService.getUser(id);
+            return (0, response_helper_1.successResponse)(res, user, 'Get user success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Get user failed');
+        }
     }
-    updateUser(req, id, dto) {
+    async createUser(req, dto, res) {
         if (!isAdmin(req))
             throw new common_1.ForbiddenException();
-        return this.adminService.updateUser(id, dto);
+        try {
+            const user = await this.adminService.createUser(dto);
+            return (0, response_helper_1.successResponse)(res, user, 'Create user success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Create user failed');
+        }
     }
-    deleteUser(req, id) {
-        if (!isAdmin(req))
-            throw new common_1.ForbiddenException();
-        return this.adminService.deleteUser(id);
+    async updateUser(id, dto, res) {
+        try {
+            const user = await this.adminService.updateUser(id, dto);
+            return (0, response_helper_1.successResponse)(res, user, 'Update user success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Update user failed');
+        }
     }
-    reportTasks(req, query) {
-        if (!isAdmin(req))
-            throw new common_1.ForbiddenException();
-        return this.adminService.reportTasks(query);
+    async deleteUser(id, res) {
+        try {
+            const result = await this.adminService.deleteUser(id);
+            return (0, response_helper_1.successResponse)(res, result, 'Delete user success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Delete user failed');
+        }
     }
-    reportUsers(req, query) {
+    async reportTasks(req, query, res) {
         if (!isAdmin(req))
             throw new common_1.ForbiddenException();
-        return this.adminService.reportUsers(query);
+        try {
+            const result = await this.adminService.reportTasks(query);
+            return (0, response_helper_1.successResponse)(res, result, 'Report tasks success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Report tasks failed');
+        }
+    }
+    async reportUsers(req, query, res) {
+        if (!isAdmin(req))
+            throw new common_1.ForbiddenException();
+        try {
+            const result = await this.adminService.reportUsers(query);
+            return (0, response_helper_1.successResponse)(res, result, 'Report users success');
+        }
+        catch (error) {
+            return (0, response_helper_1.errorResponse)(res, error, 'Report users failed');
+        }
     }
 };
 exports.AdminController = AdminController;
 __decorate([
     (0, common_1.Get)('users'),
+    (0, swagger_1.ApiOperation)({ summary: 'Quản lý user (cần quyền admin:manage)' }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Chưa đăng nhập' }),
+    (0, swagger_1.ApiForbiddenResponse)({ description: 'Không đủ quyền admin:manage' }),
+    (0, common_2.Permissions)('admin:manage'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -67,50 +109,61 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "listUsers", null);
 __decorate([
-    (0, common_1.Get)('users/:id'),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
+    (0, common_1.Get)('user/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
 ], AdminController.prototype, "getUser", null);
 __decorate([
-    (0, common_1.Put)('users/:id'),
+    (0, common_1.Post)('user'),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
-    __param(2, (0, common_1.Body)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, update_user_dto_1.UpdateUserByAdminDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, create_user_dto_1.CreateUserByAdminDto, Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "createUser", null);
+__decorate([
+    (0, common_1.Put)('user/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_user_dto_1.UpdateUserByAdminDto, Object]),
+    __metadata("design:returntype", Promise)
 ], AdminController.prototype, "updateUser", null);
 __decorate([
-    (0, common_1.Delete)('users/:id'),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
+    (0, common_1.Delete)('user/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
 ], AdminController.prototype, "deleteUser", null);
 __decorate([
     (0, common_1.Get)('report/tasks'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
 ], AdminController.prototype, "reportTasks", null);
 __decorate([
     (0, common_1.Get)('report/users'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
 ], AdminController.prototype, "reportUsers", null);
 exports.AdminController = AdminController = __decorate([
     (0, swagger_1.ApiTags)('admin'),
     (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, common_2.PermissionsGuard),
     (0, common_1.Controller)('admin'),
     __metadata("design:paramtypes", [admin_service_1.AdminService])
 ], AdminController);

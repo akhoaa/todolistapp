@@ -11,22 +11,28 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var TasksService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TasksService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const task_schema_1 = require("./schemas/task.schema");
-let TasksService = class TasksService {
+let TasksService = TasksService_1 = class TasksService {
     taskModel;
+    logger = new common_1.Logger(TasksService_1.name);
     constructor(taskModel) {
         this.taskModel = taskModel;
     }
     async create(userId, dto) {
         try {
-            return await this.taskModel.create({ ...dto, user: userId });
+            const data = { ...dto, user: userId };
+            if (!data.date)
+                data.date = new Date().toISOString().slice(0, 10);
+            return await this.taskModel.create(data);
         }
         catch (error) {
+            this.logger.error(`create error: ${error.message}`, error.stack, { userId, dto });
             throw new common_1.InternalServerErrorException('Create task failed');
         }
     }
@@ -44,6 +50,7 @@ let TasksService = class TasksService {
             return { data, page: Number(page), limit: Number(limit), total };
         }
         catch (error) {
+            this.logger.error(`findAll error: ${error.message}`, error.stack, { userId, query });
             throw new common_1.InternalServerErrorException('Get tasks failed');
         }
     }
@@ -57,6 +64,7 @@ let TasksService = class TasksService {
             return task;
         }
         catch (error) {
+            this.logger.error(`findOne error: ${error.message}`, error.stack, { userId, id });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Get task failed');
@@ -74,6 +82,7 @@ let TasksService = class TasksService {
             return task;
         }
         catch (error) {
+            this.logger.error(`update error: ${error.message}`, error.stack, { userId, id, dto });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Update task failed');
@@ -90,6 +99,7 @@ let TasksService = class TasksService {
             return { message: 'Task deleted' };
         }
         catch (error) {
+            this.logger.error(`remove error: ${error.message}`, error.stack, { userId, id });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Delete task failed');
@@ -97,7 +107,7 @@ let TasksService = class TasksService {
     }
 };
 exports.TasksService = TasksService;
-exports.TasksService = TasksService = __decorate([
+exports.TasksService = TasksService = TasksService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(task_schema_1.Task.name)),
     __metadata("design:paramtypes", [mongoose_2.Model])

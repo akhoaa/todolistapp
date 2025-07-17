@@ -9,6 +9,7 @@ import { UserDocument } from '../users/schemas/user.shema';
 export declare class AuthService {
     private userModel;
     private jwtService;
+    private readonly logger;
     constructor(userModel: Model<UserDocument>, jwtService: JwtService);
     signup(dto: SignupDto): Promise<{
         token: string;

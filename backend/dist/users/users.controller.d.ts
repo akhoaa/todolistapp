@@ -1,31 +1,10 @@
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Response, Request } from 'express';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
-    getMe(userId: string): Promise<import("mongoose").Document<unknown, {}, import("./schemas/user.shema").UserDocument, {}> & import("./schemas/user.shema").User & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
-        _id: unknown;
-    }> & {
-        __v: number;
-    }>;
-    updateMe(userId: string, dto: UpdateUserDto): Promise<{
-        name: string;
-        email: string;
-        role: string;
-        isVerified: boolean;
-        otp?: string;
-        otpExpires?: Date;
-        _id: unknown;
-        $locals: Record<string, unknown>;
-        $op: "save" | "validate" | "remove" | null;
-        $where: Record<string, unknown>;
-        baseModelName?: string;
-        collection: import("mongoose").Collection;
-        db: import("mongoose").Connection;
-        errors?: import("mongoose").Error.ValidationError;
-        id?: any;
-        isNew: boolean;
-        schema: import("mongoose").Schema;
-        __v: number;
-    }>;
+    getMe(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    updateMe(req: Request, dto: UpdateUserDto, res: Response): Promise<Response<any, Record<string, any>>>;
+    getAll(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }

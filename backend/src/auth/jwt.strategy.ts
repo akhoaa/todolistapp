@@ -6,13 +6,15 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => req?.cookies?.jwt || null,
+      ]),
       ignoreExpiration: false,
-      secretOrKey: 'your_jwt_secret', // Nên dùng biến môi trường thực tế
+      secretOrKey: process.env.JWT_SECRET || 'changeme', // Lấy từ biến môi trường, fallback nếu chưa set
     });
   }
 
   async validate(payload: any) {
-    return { userId: payload.sub, role: payload.role };
+    return { _id: payload.sub, role: payload.role };
   }
 } 

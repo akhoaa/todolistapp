@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Task, TaskDocument } from './schemas/task.schema';
@@ -7,14 +7,18 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TasksService {
+  private readonly logger = new Logger(TasksService.name);
   constructor(
     @InjectModel(Task.name) private taskModel: Model<TaskDocument>,
   ) {}
 
   async create(userId: string, dto: CreateTaskDto) {
     try {
-      return await this.taskModel.create({ ...dto, user: userId });
+      const data = { ...dto, user: userId };
+      if (!data.date) data.date = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+      return await this.taskModel.create(data);
     } catch (error) {
+      this.logger.error(`create error: ${error.message}`, error.stack, { userId, dto });
       throw new InternalServerErrorException('Create task failed');
     }
   }
@@ -30,6 +34,7 @@ export class TasksService {
       const total = await this.taskModel.countDocuments(filter);
       return { data, page: Number(page), limit: Number(limit), total };
     } catch (error) {
+      this.logger.error(`findAll error: ${error.message}`, error.stack, { userId, query });
       throw new InternalServerErrorException('Get tasks failed');
     }
   }
@@ -41,6 +46,7 @@ export class TasksService {
       if (task.user.toString() !== userId) throw new ForbiddenException('No access');
       return task;
     } catch (error) {
+      this.logger.error(`findOne error: ${error.message}`, error.stack, { userId, id });
       if (error instanceof NotFoundException || error instanceof ForbiddenException) throw error;
       throw new InternalServerErrorException('Get task failed');
     }
@@ -55,6 +61,7 @@ export class TasksService {
       await task.save();
       return task;
     } catch (error) {
+      this.logger.error(`update error: ${error.message}`, error.stack, { userId, id, dto });
       if (error instanceof NotFoundException || error instanceof ForbiddenException) throw error;
       throw new InternalServerErrorException('Update task failed');
     }
@@ -68,6 +75,7 @@ export class TasksService {
       await task.deleteOne();
       return { message: 'Task deleted' };
     } catch (error) {
+      this.logger.error(`remove error: ${error.message}`, error.stack, { userId, id });
       if (error instanceof NotFoundException || error instanceof ForbiddenException) throw error;
       throw new InternalServerErrorException('Delete task failed');
     }

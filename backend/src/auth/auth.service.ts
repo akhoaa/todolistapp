@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -16,6 +16,7 @@ function generateOTP() {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
@@ -39,6 +40,7 @@ export class AuthService {
       const token = this.jwtService.sign({ sub: newUser._id, role: newUser.role });
       return { token };
     } catch (error) {
+      this.logger.error(`signup error: ${error.message}`, error.stack, { dto });
       if (error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException('Signup failed');
     }
@@ -54,6 +56,7 @@ export class AuthService {
       const token = this.jwtService.sign({ sub: user._id, role: user.role });
       return { token };
     } catch (error) {
+      this.logger.error(`signin error: ${error.message}`, error.stack, { dto });
       if (error instanceof UnauthorizedException) throw error;
       throw new InternalServerErrorException('Signin failed');
     }
@@ -71,6 +74,7 @@ export class AuthService {
       console.log(`OTP for ${dto.email}: ${otp}`);
       return { message: 'OTP sent to email' };
     } catch (error) {
+      this.logger.error(`forgotPassword error: ${error.message}`, error.stack, { dto });
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException('Forgot password failed');
     }
@@ -89,6 +93,7 @@ export class AuthService {
       await user.save();
       return { message: 'Password reset successful' };
     } catch (error) {
+      this.logger.error(`resetPassword error: ${error.message}`, error.stack, { dto });
       if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException('Reset password failed');
     }
@@ -107,6 +112,7 @@ export class AuthService {
       await user.save();
       return { message: 'Account verified successfully' };
     } catch (error) {
+      this.logger.error(`verify error: ${error.message}`, error.stack, { dto });
       if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException('Verify failed');
     }

@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var UsersService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,8 +19,9 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const user_shema_1 = require("./schemas/user.shema");
 const bcrypt = require("bcryptjs");
-let UsersService = class UsersService {
+let UsersService = UsersService_1 = class UsersService {
     userModel;
+    logger = new common_1.Logger(UsersService_1.name);
     constructor(userModel) {
         this.userModel = userModel;
     }
@@ -31,6 +33,7 @@ let UsersService = class UsersService {
             return user;
         }
         catch (error) {
+            this.logger.error(`getMe error: ${error.message}`, error.stack, { userId });
             if (error instanceof common_1.NotFoundException)
                 throw error;
             throw new common_1.InternalServerErrorException('Get user failed');
@@ -56,14 +59,25 @@ let UsersService = class UsersService {
             return rest;
         }
         catch (error) {
+            this.logger.error(`updateMe error: ${error.message}`, error.stack, { userId, dto });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException)
                 throw error;
             throw new common_1.InternalServerErrorException('Update user failed');
         }
     }
+    async getAll() {
+        try {
+            const users = await this.userModel.find({}, '_id name email role');
+            return users;
+        }
+        catch (error) {
+            this.logger.error(`getAll error: ${error.message}`, error.stack);
+            throw new common_1.InternalServerErrorException('Get users failed');
+        }
+    }
 };
 exports.UsersService = UsersService;
-exports.UsersService = UsersService = __decorate([
+exports.UsersService = UsersService = UsersService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_shema_1.User.name)),
     __metadata("design:paramtypes", [mongoose_2.Model])

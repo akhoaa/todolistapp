@@ -24,7 +24,7 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             mongoose_1.MongooseModule.forFeature([{ name: user_shema_1.User.name, schema: user_shema_1.UserSchema }]),
             jwt_1.JwtModule.register({
-                secret: 'your_jwt_secret',
+                secret: process.env.JWT_SECRET || 'changeme',
                 signOptions: { expiresIn: '7d' },
             }),
             users_module_1.UsersModule,

@@ -12,12 +12,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const tasks_service_1 = require("./tasks.service");
 const tasks_controller_1 = require("./tasks.controller");
 const task_schema_1 = require("./schemas/task.schema");
+const permission_module_1 = require("../common/permission.module");
 let TasksModule = class TasksModule {
 };
 exports.TasksModule = TasksModule;
 exports.TasksModule = TasksModule = __decorate([
     (0, common_1.Module)({
-        imports: [mongoose_1.MongooseModule.forFeature([{ name: task_schema_1.Task.name, schema: task_schema_1.TaskSchema }])],
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: task_schema_1.Task.name, schema: task_schema_1.TaskSchema }]),
+            permission_module_1.PermissionModule,
+        ],
         controllers: [tasks_controller_1.TasksController],
         providers: [tasks_service_1.TasksService],
         exports: [tasks_service_1.TasksService],

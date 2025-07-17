@@ -16,13 +16,15 @@ const passport_jwt_1 = require("passport-jwt");
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
     constructor() {
         super({
-            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: passport_jwt_1.ExtractJwt.fromExtractors([
+                (req) => req?.cookies?.jwt || null,
+            ]),
             ignoreExpiration: false,
-            secretOrKey: 'your_jwt_secret',
+            secretOrKey: process.env.JWT_SECRET || 'changeme',
         });
     }
     async validate(payload) {
-        return { userId: payload.sub, role: payload.role };
+        return { _id: payload.sub, role: payload.role };
     }
 };
 exports.JwtStrategy = JwtStrategy;

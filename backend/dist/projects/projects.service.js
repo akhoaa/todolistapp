@@ -11,14 +11,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ProjectsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectsService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const project_schema_1 = require("./schemas/project.schema");
-let ProjectsService = class ProjectsService {
+let ProjectsService = ProjectsService_1 = class ProjectsService {
     projectModel;
+    logger = new common_1.Logger(ProjectsService_1.name);
     constructor(projectModel) {
         this.projectModel = projectModel;
     }
@@ -32,26 +34,29 @@ let ProjectsService = class ProjectsService {
             return project;
         }
         catch (error) {
+            this.logger.error(`create error: ${error.message}`, error.stack, { userId, dto });
             throw new common_1.InternalServerErrorException('Create project failed');
         }
     }
-    async findAll(userId, role, query) {
+    async findAll(userId, role) {
         try {
-            const { page = 1, limit = 10, name } = query;
             let filter = {};
             if (role === 'admin') {
+                filter = {};
             }
             else {
-                filter = { $or: [{ owner: userId }, { members: userId }] };
+                filter = {
+                    $or: [
+                        { owner: userId },
+                        { members: userId }
+                    ]
+                };
             }
-            if (name)
-                filter.name = { $regex: name, $options: 'i' };
-            const skip = (Number(page) - 1) * Number(limit);
-            const data = await this.projectModel.find(filter).skip(skip).limit(Number(limit)).sort({ createdAt: -1 });
-            const total = await this.projectModel.countDocuments(filter);
-            return { data, page: Number(page), limit: Number(limit), total };
+            const projects = await this.projectModel.find(filter);
+            return projects;
         }
         catch (error) {
+            this.logger.error(`findAll error: ${error.message}`, error.stack, { userId, role });
             throw new common_1.InternalServerErrorException('Get projects failed');
         }
     }
@@ -68,6 +73,7 @@ let ProjectsService = class ProjectsService {
             return project;
         }
         catch (error) {
+            this.logger.error(`findOne error: ${error.message}`, error.stack, { userId, role, id });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Get project failed');
@@ -86,6 +92,7 @@ let ProjectsService = class ProjectsService {
             return project;
         }
         catch (error) {
+            this.logger.error(`update error: ${error.message}`, error.stack, { userId, role, id, dto });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Update project failed');
@@ -103,6 +110,7 @@ let ProjectsService = class ProjectsService {
             return { message: 'Project deleted' };
         }
         catch (error) {
+            this.logger.error(`remove error: ${error.message}`, error.stack, { userId, role, id });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Delete project failed');
@@ -123,6 +131,7 @@ let ProjectsService = class ProjectsService {
             return project;
         }
         catch (error) {
+            this.logger.error(`addMember error: ${error.message}`, error.stack, { userId, role, id, memberId });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.ForbiddenException)
                 throw error;
             throw new common_1.InternalServerErrorException('Add member failed');
@@ -148,7 +157,7 @@ let ProjectsService = class ProjectsService {
     }
 };
 exports.ProjectsService = ProjectsService;
-exports.ProjectsService = ProjectsService = __decorate([
+exports.ProjectsService = ProjectsService = ProjectsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(project_schema_1.Project.name)),
     __metadata("design:paramtypes", [mongoose_2.Model])

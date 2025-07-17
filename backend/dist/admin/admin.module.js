@@ -13,6 +13,7 @@ const admin_service_1 = require("./admin.service");
 const admin_controller_1 = require("./admin.controller");
 const user_shema_1 = require("../users/schemas/user.shema");
 const task_schema_1 = require("../tasks/schemas/task.schema");
+const permission_module_1 = require("../common/permission.module");
 let AdminModule = class AdminModule {
 };
 exports.AdminModule = AdminModule;
@@ -23,6 +24,7 @@ exports.AdminModule = AdminModule = __decorate([
                 { name: user_shema_1.User.name, schema: user_shema_1.UserSchema },
                 { name: task_schema_1.Task.name, schema: task_schema_1.TaskSchema },
             ]),
+            permission_module_1.PermissionModule,
         ],
         controllers: [admin_controller_1.AdminController],
         providers: [admin_service_1.AdminService],

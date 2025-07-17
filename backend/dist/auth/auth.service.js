@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -22,9 +23,10 @@ const user_shema_1 = require("../users/schemas/user.shema");
 function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
-let AuthService = class AuthService {
+let AuthService = AuthService_1 = class AuthService {
     userModel;
     jwtService;
+    logger = new common_1.Logger(AuthService_1.name);
     constructor(userModel, jwtService) {
         this.userModel = userModel;
         this.jwtService = jwtService;
@@ -48,6 +50,7 @@ let AuthService = class AuthService {
             return { token };
         }
         catch (error) {
+            this.logger.error(`signup error: ${error.message}`, error.stack, { dto });
             if (error instanceof common_1.BadRequestException)
                 throw error;
             throw new common_1.InternalServerErrorException('Signup failed');
@@ -67,6 +70,7 @@ let AuthService = class AuthService {
             return { token };
         }
         catch (error) {
+            this.logger.error(`signin error: ${error.message}`, error.stack, { dto });
             if (error instanceof common_1.UnauthorizedException)
                 throw error;
             throw new common_1.InternalServerErrorException('Signin failed');
@@ -85,6 +89,7 @@ let AuthService = class AuthService {
             return { message: 'OTP sent to email' };
         }
         catch (error) {
+            this.logger.error(`forgotPassword error: ${error.message}`, error.stack, { dto });
             if (error instanceof common_1.NotFoundException)
                 throw error;
             throw new common_1.InternalServerErrorException('Forgot password failed');
@@ -105,6 +110,7 @@ let AuthService = class AuthService {
             return { message: 'Password reset successful' };
         }
         catch (error) {
+            this.logger.error(`resetPassword error: ${error.message}`, error.stack, { dto });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException)
                 throw error;
             throw new common_1.InternalServerErrorException('Reset password failed');
@@ -125,6 +131,7 @@ let AuthService = class AuthService {
             return { message: 'Account verified successfully' };
         }
         catch (error) {
+            this.logger.error(`verify error: ${error.message}`, error.stack, { dto });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException)
                 throw error;
             throw new common_1.InternalServerErrorException('Verify failed');
@@ -132,7 +139,7 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_shema_1.User.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,

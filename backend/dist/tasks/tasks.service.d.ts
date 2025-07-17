@@ -4,6 +4,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 export declare class TasksService {
     private taskModel;
+    private readonly logger;
     constructor(taskModel: Model<TaskDocument>);
     create(userId: string, dto: CreateTaskDto): Promise<import("mongoose").Document<unknown, {}, TaskDocument, {}> & Task & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
         _id: unknown;

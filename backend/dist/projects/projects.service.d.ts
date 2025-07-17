@@ -4,22 +4,18 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 export declare class ProjectsService {
     private projectModel;
+    private readonly logger;
     constructor(projectModel: Model<ProjectDocument>);
     create(userId: string, dto: CreateProjectDto): Promise<import("mongoose").Document<unknown, {}, ProjectDocument, {}> & Project & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
         _id: unknown;
     }> & {
         __v: number;
     }>;
-    findAll(userId: string, role: string, query: any): Promise<{
-        data: (import("mongoose").Document<unknown, {}, ProjectDocument, {}> & Project & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
-            _id: unknown;
-        }> & {
-            __v: number;
-        })[];
-        page: number;
-        limit: number;
-        total: number;
-    }>;
+    findAll(userId: string, role: string): Promise<(import("mongoose").Document<unknown, {}, ProjectDocument, {}> & Project & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
     findOne(userId: string, role: string, id: string): Promise<import("mongoose").Document<unknown, {}, ProjectDocument, {}> & Project & import("mongoose").Document<unknown, any, any, Record<string, any>> & Required<{
         _id: unknown;
     }> & {

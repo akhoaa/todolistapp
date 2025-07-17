@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var AdminService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,9 +19,11 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const user_shema_1 = require("../users/schemas/user.shema");
 const task_schema_1 = require("../tasks/schemas/task.schema");
-let AdminService = class AdminService {
+const bcrypt = require("bcryptjs");
+let AdminService = AdminService_1 = class AdminService {
     userModel;
     taskModel;
+    logger = new common_1.Logger(AdminService_1.name);
     constructor(userModel, taskModel) {
         this.userModel = userModel;
         this.taskModel = taskModel;
@@ -41,6 +44,7 @@ let AdminService = class AdminService {
             return { data, page: Number(page), limit: Number(limit), total };
         }
         catch (error) {
+            this.logger.error(`listUsers error: ${error.message}`, error.stack, { query });
             throw new common_1.InternalServerErrorException('Get users failed');
         }
     }
@@ -52,6 +56,7 @@ let AdminService = class AdminService {
             return user;
         }
         catch (error) {
+            this.logger.error(`getUser error: ${error.message}`, error.stack, { id });
             if (error instanceof common_1.NotFoundException)
                 throw error;
             throw new common_1.InternalServerErrorException('Get user failed');
@@ -81,6 +86,7 @@ let AdminService = class AdminService {
             return rest;
         }
         catch (error) {
+            this.logger.error(`updateUser error: ${error.message}`, error.stack, { id, dto });
             if (error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException)
                 throw error;
             throw new common_1.InternalServerErrorException('Update user failed');
@@ -95,9 +101,33 @@ let AdminService = class AdminService {
             return { message: 'User deleted' };
         }
         catch (error) {
+            this.logger.error(`deleteUser error: ${error.message}`, error.stack, { id });
             if (error instanceof common_1.NotFoundException)
                 throw error;
             throw new common_1.InternalServerErrorException('Delete user failed');
+        }
+    }
+    async createUser(dto) {
+        try {
+            const exists = await this.userModel.findOne({ email: dto.email });
+            if (exists)
+                throw new common_1.BadRequestException('Email already exists');
+            const hash = await bcrypt.hash(dto.password, 10);
+            const user = await this.userModel.create({
+                name: dto.name,
+                email: dto.email,
+                password: hash,
+                role: dto.role,
+                isVerified: true
+            });
+            const { password, ...rest } = user.toObject();
+            return rest;
+        }
+        catch (error) {
+            this.logger.error(`createUser error: ${error.message}`, error.stack, { dto });
+            if (error instanceof common_1.BadRequestException)
+                throw error;
+            throw new common_1.InternalServerErrorException('Create user failed');
         }
     }
     async reportTasks(query) {
@@ -112,6 +142,7 @@ let AdminService = class AdminService {
             return { data };
         }
         catch (error) {
+            this.logger.error(`reportTasks error: ${error.message}`, error.stack, { query });
             throw new common_1.InternalServerErrorException('Get report tasks failed');
         }
     }
@@ -120,12 +151,13 @@ let AdminService = class AdminService {
             return { data: [], ...query };
         }
         catch (error) {
+            this.logger.error(`reportUsers error: ${error.message}`, error.stack, { query });
             throw new common_1.InternalServerErrorException('Get report users failed');
         }
     }
 };
 exports.AdminService = AdminService;
-exports.AdminService = AdminService = __decorate([
+exports.AdminService = AdminService = AdminService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_shema_1.User.name)),
     __param(1, (0, mongoose_1.InjectModel)(task_schema_1.Task.name)),
